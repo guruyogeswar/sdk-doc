@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examples · LIMBIC Engine</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <a href="index.html" class="brand"><span class="brand-mark">L</span> LIMBIC Engine</a>
+    <span class="version">v0.1.0</span>
+    <span class="spacer"></span>
+    <nav class="topbar-links">
+        <a href="api.html">API</a>
+        <a href="examples.html">Examples</a>
+        <a href="../sdk/README.md">SDK reference</a>
+    </nav>
+</header>
+
+<div class="shell">
+
+<aside class="sidebar">
+    <div class="nav-group">
+        <div class="nav-group-title">Getting started</div>
+        <a href="index.html">Introduction</a>
+        <a href="quickstart.html">Quickstart</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Concepts</div>
+        <a href="architecture.html">Architecture</a>
+        <a href="modules.html">Brain modules</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Reference</div>
+        <a href="api.html">C++ API</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Guides</div>
+        <a href="examples.html" class="active">Examples</a>
+    </div>
+</aside>
+
+<main class="content">
+    <div class="breadcrumb"><a href="index.html">Docs</a><span class="sep">/</span>Guides<span class="sep">/</span>Examples</div>
+
+    <h1>Examples</h1>
+    <p class="lede">
+        Five end-to-end snippets — minimal loop, town scenario, dialogue context,
+        Python, and Unity. The full source for each ships in <code>sdk/examples/</code>
+        and inside the release tarball.
+    </p>
+
+    <h2 id="minimal">Minimal game loop</h2>
+    <p>One agent, ten ticks. The smallest LIMBIC program.</p>
+<pre><span class="filename">examples/basic_usage.cpp <span class="lang">C++</span></span><code><span class="t-c">#include</span> <span class="t-s">"limbic/limbic_engine.hpp"</span>
+<span class="t-k">using namespace</span> limbic::sdk;
+
+<span class="t-t">int</span> <span class="t-f">main</span>() {
+    EngineConfig cfg;
+    cfg.preset     = Preset::COGNITIVE;
+    cfg.max_agents = <span class="t-n">100</span>;
+    cfg.seed       = <span class="t-n">42</span>;
+    <span class="t-k">auto</span> engine = LimbicEngine::create(cfg);
+
+    engine.register_action(<span class="t-s">"patrol"</span>, TAG_MOVEMENT | TAG_ROUTINE);
+    engine.register_action(<span class="t-s">"forage"</span>, TAG_RESOURCE | TAG_SURVIVAL);
+    engine.register_action(<span class="t-s">"trade"</span>,  TAG_SOCIAL   | TAG_COOPERATIVE);
+    engine.register_action(<span class="t-s">"fight"</span>,  TAG_AGGRESSIVE | TAG_MOVEMENT);
+    engine.register_action(<span class="t-s">"rest"</span>,   TAG_ROUTINE  | TAG_SURVIVAL);
+
+    AgentConfig ac{ .x=<span class="t-n">100</span>, .y=<span class="t-n">100</span>, .personality=Personality::MERCHANT };
+    <span class="t-t">uint32_t</span> npc = engine.spawn(ac);
+
+    <span class="t-k">for</span> (<span class="t-t">int</span> i = <span class="t-n">0</span>; i &lt; <span class="t-n">300</span>; ++i) {
+        <span class="t-t">float</span> energy = <span class="t-n">0.8f</span>, hunger = <span class="t-n">0.3f</span>;
+        engine.perceive(npc, Percept::ENERGY_LEVEL, &amp;energy, <span class="t-n">1</span>);
+        engine.perceive(npc, Percept::HUNGER,       &amp;hunger, <span class="t-n">1</span>);
+        engine.tick(<span class="t-n">0.016f</span>);
+
+        Decision d = engine.get_decision(npc);
+        engine.report_outcome(npc, <span class="t-c">/*reward=*/</span> <span class="t-n">0.3f</span>, <span class="t-n">5.f</span>);
+    }
+}</code></pre>
+
+    <h2 id="town">Town with three factions</h2>
+    <p>Guards, merchants, bandits. Demonstrates groups, spatial queries, events, batch perception, save/load, and selective tick.</p>
+<pre><span class="filename">examples/game_scenario.cpp · excerpt <span class="lang">C++</span></span><code><span class="t-c">// Spawn factions</span>
+<span class="t-k">for</span> (<span class="t-t">int</span> i = <span class="t-n">0</span>; i &lt; <span class="t-n">10</span>; ++i) {
+    <span class="t-t">uint32_t</span> g = engine.spawn({ .x=<span class="t-n">50</span>, .y=<span class="t-n">50</span>, .personality=Personality::GUARD });
+    engine.set_group(g, <span class="t-n">1</span>);   <span class="t-c">// guards</span>
+}
+<span class="t-k">for</span> (<span class="t-t">int</span> i = <span class="t-n">0</span>; i &lt; <span class="t-n">20</span>; ++i) {
+    <span class="t-t">uint32_t</span> m = engine.spawn({ .x=<span class="t-n">100</span>, .y=<span class="t-n">100</span>, .personality=Personality::MERCHANT });
+    engine.set_group(m, <span class="t-n">2</span>);   <span class="t-c">// merchants</span>
+}
+
+<span class="t-c">// Subscribe to deaths and emotion shifts</span>
+engine.subscribe(EVENT_AGENT_DIED | EVENT_EMOTION_SHIFT,
+    [](<span class="t-k">const</span> Event* ev, <span class="t-t">void</span>*) {
+        <span class="t-f">printf</span>(<span class="t-s">"event %u on agent %u tick %u\n"</span>,
+               ev-&gt;type, ev-&gt;agent_id, ev-&gt;tick);
+    }, <span class="t-k">nullptr</span>);
+
+<span class="t-c">// LOD pattern: tick only guards this frame</span>
+<span class="t-t">uint32_t</span> guard_ids[<span class="t-n">64</span>];
+<span class="t-t">uint32_t</span> n = engine.get_group_agents(<span class="t-n">1</span>, guard_ids, <span class="t-n">64</span>);
+engine.tick_agents(guard_ids, n, <span class="t-n">0.016f</span>);
+
+<span class="t-c">// Save checkpoint</span>
+engine.save(<span class="t-s">"town_state.bin"</span>);</code></pre>
+
+    <h2 id="dialogue">Dialogue context for a quest NPC</h2>
+    <p>One call returns tone, intent, relationship, top urgent need, and the four most emotionally-weighted shared memories. The intent (<code>SEEK_HELP</code>, <code>ACCUSE</code>, <code>THANK</code>, <code>THREATEN</code>, <code>SOCIALIZE</code>, …) is inferred from internal state — never authored.</p>
+<pre><span class="filename">dialogue.cpp <span class="lang">C++</span></span><code><span class="t-k">auto</span> ctx = engine.get_dialogue_context(npc, player);
+
+<span class="t-k">switch</span> (ctx.intent) {
+    <span class="t-k">case</span> Intent::SEEK_HELP:
+        bark = <span class="t-s">"Please... I need "</span> + std::<span class="t-f">string</span>(ctx.top_need.name);
+        <span class="t-k">break</span>;
+    <span class="t-k">case</span> Intent::ACCUSE:
+        bark = <span class="t-s">"You betrayed me. I haven't forgotten."</span>;
+        <span class="t-k">break</span>;
+    <span class="t-k">case</span> Intent::SOCIALIZE:
+        bark = (ctx.tone == Tone::FRIENDLY) ? <span class="t-s">"Good to see you!"</span> : <span class="t-s">"...hey."</span>;
+        <span class="t-k">break</span>;
+}</code></pre>
+    <p>Or feed the struct to an LLM prompt — tone, relationship, trust, top need, and recent shared memories produce grounded barks without hallucinated history.</p>
+
+    <h2 id="python">Python — experiments and RL</h2>
+<pre><span class="filename">my_experiment.py <span class="lang">python</span></span><code><span class="t-k">from</span> limbic <span class="t-k">import</span> LimbicEngine, Preset, Personality, Percept
+
+<span class="t-k">with</span> LimbicEngine(preset=Preset.COGNITIVE, max_agents=<span class="t-n">100</span>) <span class="t-k">as</span> engine:
+    npc = engine.spawn(x=<span class="t-n">50</span>, y=<span class="t-n">50</span>, personality=Personality.GUARD)
+    engine.tick(<span class="t-n">0.016</span>)
+    d = engine.get_decision(npc)
+    <span class="t-f">print</span>(<span class="t-s">f"{d.action_name} (confidence: {d.confidence:.2f})"</span>)</code></pre>
+    <p>Set <code>LIMBIC_LIB</code> to the path of <code>liblimbic.so</code> before running.</p>
+
+    <h2 id="unity">Unity — drop-in NPC</h2>
+<pre><span class="filename">NpcBrain.cs <span class="lang">C#</span></span><code><span class="t-k">using</span> Limbic;
+
+<span class="t-k">var</span> engine = <span class="t-k">new</span> LimbicEngine(<span class="t-k">new</span> LimbicConfig {
+    preset    = Preset.COGNITIVE,
+    maxAgents = <span class="t-n">100</span>
+});
+
+<span class="t-t">uint</span> npcId = engine.Spawn(<span class="t-k">new</span> AgentConfig {
+    x = <span class="t-n">50</span>, y = <span class="t-n">50</span>,
+    personality = Personality.GUARD
+});
+engine.Tick(<span class="t-n">0.016f</span>);
+<span class="t-k">var</span> d = engine.GetDecision(npcId);</code></pre>
+    <p>Copy <code>liblimbic.so</code> or <code>limbic.dll</code> into the Unity project's <code>Plugins/</code> folder. A <code>LimbicNPC</code> MonoBehaviour wrapper ships in <code>sdk/bindings/unity/</code>.</p>
+
+    <footer class="page-footer">
+        <div><a href="api.html">← C++ API</a></div>
+        <div><a href="index.html">Back to Introduction →</a></div>
+    </footer>
+</main>
+
+<aside class="toc">
+    <div class="toc-title">On this page</div>
+    <a href="#minimal">Minimal game loop</a>
+    <a href="#town">Town with factions</a>
+    <a href="#dialogue">Dialogue context</a>
+    <a href="#python">Python</a>
+    <a href="#unity">Unity</a>
+</aside>
+
+</div>
+</body>
+</html>

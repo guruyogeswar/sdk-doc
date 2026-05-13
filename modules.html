@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brain modules · LIMBIC Engine</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <a href="index.html" class="brand"><span class="brand-mark">L</span> LIMBIC Engine</a>
+    <span class="version">v0.1.0</span>
+    <span class="spacer"></span>
+    <nav class="topbar-links">
+        <a href="api.html">API</a>
+        <a href="examples.html">Examples</a>
+        <a href="../sdk/README.md">SDK reference</a>
+    </nav>
+</header>
+
+<div class="shell">
+
+<aside class="sidebar">
+    <div class="nav-group">
+        <div class="nav-group-title">Getting started</div>
+        <a href="index.html">Introduction</a>
+        <a href="quickstart.html">Quickstart</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Concepts</div>
+        <a href="architecture.html">Architecture</a>
+        <a href="modules.html" class="active">Brain modules</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Reference</div>
+        <a href="api.html">C++ API</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Guides</div>
+        <a href="examples.html">Examples</a>
+    </div>
+</aside>
+
+<main class="content">
+    <div class="breadcrumb"><a href="index.html">Docs</a><span class="sep">/</span>Concepts<span class="sep">/</span>Brain modules</div>
+
+    <h1>Brain modules</h1>
+    <p class="lede">
+        Thirty independent units of logic, each loosely named after a brain region
+        or cognitive function. Modules read pools, write pools, and never import
+        each other. The orchestrator decides which ones run, and in what order,
+        based on the active preset.
+    </p>
+
+    <h2 id="presets">Which modules run</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Preset</th><th>Modules</th><th>Adds</th><th>Best for</th></tr></thead>
+        <tbody>
+            <tr><td><code>REACTIVE</code></td><td>8</td><td>Basal ganglia, hypothalamus, basic drives</td><td>Crowd filler, animals, ambient NPCs</td></tr>
+            <tr><td><code>COGNITIVE</code></td><td>18</td><td>+ Hippocampus, amygdala, PFC, ToM, causal model</td><td>Merchants, companions, quest-givers</td></tr>
+            <tr><td><code>FULL</code></td><td>30</td><td>+ Social memory, narrative identity, plasticity</td><td>Persistent characters, emergent stories</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="affective">Affective &amp; motivational <span class="pill">6 modules</span></h2>
+    <div class="modlist">
+        <div><code>amygdala_module</code><div class="desc">Threat detection and emotional salience tagging.</div></div>
+        <div><code>hypothalamus_module</code><div class="desc">Homeostatic drives — hunger, thirst, fatigue.</div></div>
+        <div><code>interoception_module</code><div class="desc">Body-state sensing fed back to higher modules.</div></div>
+        <div><code>neuromodulator_module</code><div class="desc">DA, 5-HT, NE, ACh, cortisol, oxytocin, endorphins.</div></div>
+        <div><code>learned_drive_module</code><div class="desc">Acquired motivations beyond hardwired drives.</div></div>
+        <div><code>behavioral_regulation_module</code><div class="desc">Impulse control and inhibition.</div></div>
+    </div>
+
+    <h2 id="memory">Memory &amp; learning <span class="pill">6 modules</span></h2>
+    <div class="modlist">
+        <div><code>hippocampus_module</code><div class="desc">Episodic memory: encode, consolidate, retrieve.</div></div>
+        <div><code>learning_module</code><div class="desc">Temporal-difference reinforcement learning.</div></div>
+        <div><code>plasticity_module</code><div class="desc">Hebbian and dopamine-gated synaptic updates.</div></div>
+        <div><code>meta_learning_module</code><div class="desc">Adapts learning rate from outcome variance.</div></div>
+        <div><code>causal_model_module</code><div class="desc">Cause → effect belief graph with confidence.</div></div>
+        <div><code>world_model_module</code><div class="desc">Forward model used by planning and active inference.</div></div>
+    </div>
+
+    <h2 id="control">Attention &amp; control <span class="pill">6 modules</span></h2>
+    <div class="modlist">
+        <div><code>acc_module</code><div class="desc">Anterior cingulate — conflict and error monitoring.</div></div>
+        <div><code>attentional_dynamics_module</code><div class="desc">Gain control over sensory and memory channels.</div></div>
+        <div><code>pfc_module</code><div class="desc">Prefrontal cortex — top-down executive bias on action selection.</div></div>
+        <div><code>planning_module</code><div class="desc">Short-horizon rollouts over the world model.</div></div>
+        <div><code>active_inference_module</code><div class="desc">Free-energy minimisation between belief and observation.</div></div>
+        <div><code>metacognition_module</code><div class="desc">Confidence estimation over the agent's own decisions.</div></div>
+    </div>
+
+    <h2 id="action">Action selection <span class="pill">4 modules</span></h2>
+    <div class="modlist">
+        <div><code>basal_ganglia_module</code><div class="desc">D1 Go / D2 NoGo arbitration over 28 action types.</div></div>
+        <div><code>action_execution_module</code><div class="desc">Commits the selected action into the decision pool.</div></div>
+        <div><code>expression_module</code><div class="desc">Translates internal state to externally-readable cues.</div></div>
+        <div><code>cognitive_trace_module</code><div class="desc">Logs per-tick decision evidence for <code>explain()</code>.</div></div>
+    </div>
+
+    <h2 id="social">Social, symbolic &amp; self <span class="pill">9 modules</span></h2>
+    <div class="modlist">
+        <div><code>theory_of_mind_module</code><div class="desc">Models other agents' beliefs and intents.</div></div>
+        <div><code>social_cognition_module</code><div class="desc">Trust, alliance, betrayal — per-pair edges.</div></div>
+        <div><code>identity_module</code><div class="desc">Evolved personality vector — trust, optimism, aggression, stability.</div></div>
+        <div><code>narrative_module</code><div class="desc">Encodes the agent's life story from episodic memories.</div></div>
+        <div><code>narrative_self_module</code><div class="desc">Maintains a self-model coherent with the narrative.</div></div>
+        <div><code>coherence_module</code><div class="desc">Enforces internal consistency across belief, mood, identity.</div></div>
+        <div><code>symbolic_reasoner_module</code><div class="desc">Light logical inference over symbolic propositions.</div></div>
+        <div><code>symbolic_grounding_module</code><div class="desc">Bridges sensorimotor state to symbols.</div></div>
+        <div><code>evolution_economy_module</code><div class="desc">Multi-agent population dynamics and resource flow.</div></div>
+    </div>
+
+    <footer class="page-footer">
+        <div><a href="architecture.html">← Architecture</a></div>
+        <div>Next: <a href="api.html">C++ API →</a></div>
+    </footer>
+</main>
+
+<aside class="toc">
+    <div class="toc-title">On this page</div>
+    <a href="#presets">Which modules run</a>
+    <a href="#affective">Affective</a>
+    <a href="#memory">Memory &amp; learning</a>
+    <a href="#control">Attention &amp; control</a>
+    <a href="#action">Action selection</a>
+    <a href="#social">Social, symbolic, self</a>
+</aside>
+
+</div>
+</body>
+</html>

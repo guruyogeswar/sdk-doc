@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction · LIMBIC Engine</title>
+<meta name="description" content="LIMBIC Engine — a neuroscience-grounded NPC cognition engine in C++17.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <a href="index.html" class="brand"><span class="brand-mark">L</span> LIMBIC Engine</a>
+    <span class="version">v0.1.0</span>
+    <span class="spacer"></span>
+    <nav class="topbar-links">
+        <a href="api.html">API</a>
+        <a href="examples.html">Examples</a>
+        <a href="../sdk/README.md">SDK reference</a>
+    </nav>
+</header>
+
+<div class="shell">
+
+<aside class="sidebar">
+    <div class="nav-group">
+        <div class="nav-group-title">Getting started</div>
+        <a href="index.html" class="active">Introduction</a>
+        <a href="quickstart.html">Quickstart</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Concepts</div>
+        <a href="architecture.html">Architecture</a>
+        <a href="modules.html">Brain modules</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Reference</div>
+        <a href="api.html">C++ API</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Guides</div>
+        <a href="examples.html">Examples</a>
+    </div>
+</aside>
+
+<main class="content">
+    <div class="breadcrumb"><a href="index.html">Docs</a><span class="sep">/</span>Introduction</div>
+
+    <h1>LIMBIC Engine</h1>
+    <p class="lede">
+        A C++17 cognition engine for NPCs and agent simulations. Every agent runs
+        a biologically-grounded brain — emotions, drives, memory, neuromodulators,
+        social cognition, and reinforcement learning. Behaviour emerges from
+        internal dynamics; no behaviour trees, no scripts.
+    </p>
+
+    <h2 id="what-it-is">What this is</h2>
+    <p>
+        LIMBIC is not a behaviour tree. It is not a planner. It is not a finite
+        state machine. It is a simulated brain that runs once per tick, per agent,
+        through a fixed seven-stage pipeline. The host game owns the world; LIMBIC
+        owns the mind.
+    </p>
+    <div class="callout info">
+        <span class="label">Note</span>
+        Your game pushes percepts in, calls <code>tick()</code>, reads the agent's
+        decision out, and reports an outcome. The engine handles emotional dynamics,
+        drive homeostasis, memory formation, neuromodulator regulation, action
+        selection in the basal ganglia, and dopamine-driven learning.
+    </div>
+
+    <h2 id="pipeline">The tick pipeline</h2>
+    <div class="pipeline">
+        <div class="step"><div class="k">Sense</div><div class="d">128-D percept vector</div></div>
+        <div class="step"><div class="k">Feel</div><div class="d">Amygdala, hypothalamus</div></div>
+        <div class="step"><div class="k">Remember</div><div class="d">Hippocampus</div></div>
+        <div class="step"><div class="k">Attend</div><div class="d">ACC, attention</div></div>
+        <div class="step"><div class="k">Decide</div><div class="d">Basal ganglia, PFC</div></div>
+        <div class="step"><div class="k">Act</div><div class="d">Motor selection</div></div>
+        <div class="step"><div class="k">Learn</div><div class="d">Dopamine RPE</div></div>
+    </div>
+
+    <h2 id="minimal-example">A minimal example</h2>
+<pre>
+<span class="filename">my_game.cpp <span class="lang">C++</span></span>
+<code><span class="t-c">#include</span> <span class="t-s">"limbic/limbic_engine.hpp"</span>
+<span class="t-k">using namespace</span> limbic::sdk;
+
+<span class="t-t">int</span> <span class="t-f">main</span>() {
+    EngineConfig cfg;
+    cfg.preset     = Preset::COGNITIVE;
+    cfg.max_agents = <span class="t-n">100</span>;
+    <span class="t-k">auto</span> engine = LimbicEngine::create(cfg);
+
+    engine.register_action(<span class="t-s">"forage"</span>, TAG_RESOURCE | TAG_SURVIVAL);
+    engine.register_action(<span class="t-s">"trade"</span>,  TAG_SOCIAL   | TAG_COOPERATIVE);
+
+    AgentConfig ac{ .x=<span class="t-n">100</span>, .y=<span class="t-n">100</span>, .personality=Personality::MERCHANT };
+    <span class="t-t">uint32_t</span> npc = engine.spawn(ac);
+
+    <span class="t-k">for</span> (<span class="t-t">int</span> i = <span class="t-n">0</span>; i &lt; <span class="t-n">300</span>; ++i) {
+        <span class="t-t">float</span> energy = <span class="t-n">0.8f</span>;
+        engine.perceive(npc, Percept::ENERGY_LEVEL, &amp;energy, <span class="t-n">1</span>);
+        engine.tick(<span class="t-n">0.016f</span>);
+        Decision d = engine.get_decision(npc);
+        engine.report_outcome(npc, <span class="t-c">/*reward=*/</span> <span class="t-n">0.3f</span>, <span class="t-n">5.f</span>);
+    }
+}</code></pre>
+
+    <h2 id="how-its-different">How it differs from conventional NPC AI</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Conventional</th><th>LIMBIC</th></tr></thead>
+        <tbody>
+            <tr><td>Behaviour trees authored per role</td><td>Behaviour emerges from internal state</td></tr>
+            <tr><td>Memory bolted on as a scripting feature</td><td>Episodic hippocampal memory built in</td></tr>
+            <tr><td>Mood is a tag on a node</td><td>Mood is a continuous neuromodulator field</td></tr>
+            <tr><td>Relationships are integer reputation scores</td><td>Per-pair trust, threat, alliance, betrayal</td></tr>
+            <tr><td>Learning means hand-tuning constants</td><td>Dopamine-RPE learning at runtime</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="where-next">Where to go next</h2>
+    <ul>
+        <li><a href="quickstart.html">Quickstart</a> — get an NPC ticking in five minutes.</li>
+        <li><a href="architecture.html">Architecture</a> — the three layers and how data flows.</li>
+        <li><a href="modules.html">Brain modules</a> — what each of the 30 modules does.</li>
+        <li><a href="api.html">C++ API reference</a> — every method on <code>LimbicEngine</code>.</li>
+        <li><a href="examples.html">Examples</a> — town scenario, dialogue, Python and Unity.</li>
+    </ul>
+
+    <footer class="page-footer">
+        <div>LIMBIC Engine · v0.1.0</div>
+        <div>Next: <a href="quickstart.html">Quickstart →</a></div>
+    </footer>
+</main>
+
+<aside class="toc">
+    <div class="toc-title">On this page</div>
+    <a href="#what-it-is">What this is</a>
+    <a href="#pipeline">The tick pipeline</a>
+    <a href="#minimal-example">A minimal example</a>
+    <a href="#how-its-different">How it differs</a>
+    <a href="#where-next">Where to go next</a>
+</aside>
+
+</div>
+</body>
+</html>

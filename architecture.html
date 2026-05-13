@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture · LIMBIC Engine</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <a href="index.html" class="brand"><span class="brand-mark">L</span> LIMBIC Engine</a>
+    <span class="version">v0.1.0</span>
+    <span class="spacer"></span>
+    <nav class="topbar-links">
+        <a href="api.html">API</a>
+        <a href="examples.html">Examples</a>
+        <a href="../sdk/README.md">SDK reference</a>
+    </nav>
+</header>
+
+<div class="shell">
+
+<aside class="sidebar">
+    <div class="nav-group">
+        <div class="nav-group-title">Getting started</div>
+        <a href="index.html">Introduction</a>
+        <a href="quickstart.html">Quickstart</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Concepts</div>
+        <a href="architecture.html" class="active">Architecture</a>
+        <a href="modules.html">Brain modules</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Reference</div>
+        <a href="api.html">C++ API</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Guides</div>
+        <a href="examples.html">Examples</a>
+    </div>
+</aside>
+
+<main class="content">
+    <div class="breadcrumb"><a href="index.html">Docs</a><span class="sep">/</span>Concepts<span class="sep">/</span>Architecture</div>
+
+    <h1>Architecture</h1>
+    <p class="lede">
+        LIMBIC is built on a strict separation: pools own data, modules own logic,
+        the orchestrator owns the schedule. This document explains the three API
+        layers, the seven-stage tick pipeline, and the data model that lets one
+        machine run thousands of cognitive agents in real time.
+    </p>
+
+    <h2 id="layers">Three layers</h2>
+    <p>The host game touches Layer 2 (C++) or Layer 3 (C). The core stays sealed.</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Layer</th><th>Surface</th><th>Responsibility</th></tr></thead>
+        <tbody>
+            <tr><td><strong>3</strong></td><td><code>limbic.h</code> · C FFI</td><td>Stable C ABI — used by the Python, C#, Godot, and Unity bindings.</td></tr>
+            <tr><td><strong>2</strong></td><td><code>LimbicEngine</code> · C++ class</td><td>Primary integration. Move-only RAII handle. <code>spawn</code>, <code>perceive</code>, <code>tick</code>, <code>get_decision</code>, <code>report_outcome</code>.</td></tr>
+            <tr><td><strong>1</strong></td><td>core</td><td>The brain itself. Sealed. Consumers receive only the compiled shared library.</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="pipeline">The seven-stage pipeline</h2>
+    <p>Every tick, every agent, always in this order.</p>
+    <div class="pipeline">
+        <div class="step"><div class="k">Sense</div><div class="d">Percept world → 128-D vector</div></div>
+        <div class="step"><div class="k">Feel</div><div class="d">Amygdala, hypothalamus, interoception</div></div>
+        <div class="step"><div class="k">Remember</div><div class="d">Hippocampus encode + retrieve</div></div>
+        <div class="step"><div class="k">Attend</div><div class="d">ACC conflict + attentional dynamics</div></div>
+        <div class="step"><div class="k">Decide</div><div class="d">Basal ganglia D1/D2 + PFC bias</div></div>
+        <div class="step"><div class="k">Act</div><div class="d">Action execution + expression</div></div>
+        <div class="step"><div class="k">Learn</div><div class="d">Dopamine RPE + plasticity</div></div>
+    </div>
+    <div class="callout warn">
+        <span class="label">Rule</span>
+        Fix perception or rewards — never hardcode behaviour. If an agent does the
+        wrong thing, the diagnosis is upstream of the basal ganglia: bad percepts,
+        bad reward shaping, or a misaligned neuromodulator baseline.
+    </div>
+
+    <h2 id="data">Data model: structure of arrays</h2>
+    <p>
+        Every per-agent field lives in a pool — a flat <code>std::vector</code>
+        indexed by agent id. A module reads one or two pool fields and writes one
+        or two pool fields. There are no agent objects.
+    </p>
+<pre><span class="filename">Inside a module <span class="lang">C++</span></span><code><span class="t-c">// Cache-friendly, OpenMP-friendly, serialisation-friendly.</span>
+<span class="t-k">for</span> (<span class="t-t">uint32_t</span> i = <span class="t-n">0</span>; i &lt; N; ++i) {
+    emo.valence[i] += dt * (drive[i] - emo.valence[i]);
+}</code></pre>
+
+    <p>This layout gives three properties for free:</p>
+    <ul>
+        <li><strong>Cache locality.</strong> A module's hot loop walks one contiguous array.</li>
+        <li><strong>Parallelism.</strong> <code>#pragma omp parallel for</code> over agent ids is safe and trivial.</li>
+        <li><strong>Serialisation.</strong> A pool is its arrays plus a header — saving means dumping bytes.</li>
+    </ul>
+
+    <h2 id="modules">Module discipline</h2>
+    <div class="cards">
+        <div class="card">
+            <h4>Presets, not feature flags</h4>
+            <p>Three presets — <code>REACTIVE</code>, <code>COGNITIVE</code>, <code>FULL</code> — control which modules run on a given agent.</p>
+        </div>
+        <div class="card">
+            <h4>Deterministic by seed</h4>
+            <p>Same seed and inputs produce bit-identical output. Tests, replays, and emergent stories all reproduce.</p>
+        </div>
+        <div class="card">
+            <h4>Explainable</h4>
+            <p>Every decision exposes its evidence via <code>explain()</code> — per-module contribution, neuromodulator state, action scores.</p>
+        </div>
+        <div class="card">
+            <h4>LOD-friendly</h4>
+            <p><code>tick_agents()</code> lets you tick only the agents that matter this frame, mixing presets in one world.</p>
+        </div>
+    </div>
+
+    <h2 id="data-flow">How a tick flows</h2>
+    <ol>
+        <li>The host calls <code>perceive()</code> any number of times to push world state into each agent's sensory buffer.</li>
+        <li>The host calls <code>tick(dt)</code>. The orchestrator runs every enabled module in pipeline order, parallelising the inner agent loop with OpenMP.</li>
+        <li>The basal ganglia commits a single action per agent into the decision pool.</li>
+        <li>The host calls <code>get_decision()</code> and acts in the game world.</li>
+        <li>The host calls <code>report_outcome()</code> with reward and energy delta. This populates the dopamine signal that the next tick's learning stage will consume.</li>
+    </ol>
+
+    <h2 id="threading">Threading model</h2>
+    <p>
+        <code>LimbicEngine</code> is <strong>not</strong> thread-safe at the public API.
+        Internally, <code>tick()</code> uses OpenMP across agents within each module.
+        Specific rules:
+    </p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Operation</th><th>Rule</th></tr></thead>
+        <tbody>
+            <tr><td><code>tick()</code>, <code>tick_agents()</code></td><td>Single thread. Do not call concurrently with anything.</td></tr>
+            <tr><td>Read-only queries (<code>get_emotions</code>, …)</td><td>Concurrent with each other OK. Not during <code>tick()</code>.</td></tr>
+            <tr><td><code>set_param</code>, <code>perceive</code>, <code>report_outcome</code></td><td>Single thread. Call between ticks.</td></tr>
+        </tbody>
+    </table></div>
+
+    <footer class="page-footer">
+        <div><a href="quickstart.html">← Quickstart</a></div>
+        <div>Next: <a href="modules.html">Brain modules →</a></div>
+    </footer>
+</main>
+
+<aside class="toc">
+    <div class="toc-title">On this page</div>
+    <a href="#layers">Three layers</a>
+    <a href="#pipeline">Seven-stage pipeline</a>
+    <a href="#data">Data model</a>
+    <a href="#modules">Module discipline</a>
+    <a href="#data-flow">How a tick flows</a>
+    <a href="#threading">Threading model</a>
+</aside>
+
+</div>
+</body>
+</html>

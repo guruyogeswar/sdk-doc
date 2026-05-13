@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quickstart · LIMBIC Engine</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <a href="index.html" class="brand"><span class="brand-mark">L</span> LIMBIC Engine</a>
+    <span class="version">v0.1.0</span>
+    <span class="spacer"></span>
+    <nav class="topbar-links">
+        <a href="api.html">API</a>
+        <a href="examples.html">Examples</a>
+        <a href="../sdk/README.md">SDK reference</a>
+    </nav>
+</header>
+
+<div class="shell">
+
+<aside class="sidebar">
+    <div class="nav-group">
+        <div class="nav-group-title">Getting started</div>
+        <a href="index.html">Introduction</a>
+        <a href="quickstart.html" class="active">Quickstart</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Concepts</div>
+        <a href="architecture.html">Architecture</a>
+        <a href="modules.html">Brain modules</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Reference</div>
+        <a href="api.html">C++ API</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Guides</div>
+        <a href="examples.html">Examples</a>
+    </div>
+</aside>
+
+<main class="content">
+    <div class="breadcrumb"><a href="index.html">Docs</a><span class="sep">/</span>Getting started<span class="sep">/</span>Quickstart</div>
+
+    <h1>Quickstart</h1>
+    <p class="lede">
+        Get a LIMBIC agent thinking in five minutes. You need a C++17 compiler,
+        CMake 3.16+, and OpenMP 4.5 at runtime.
+    </p>
+
+    <div class="callout info">
+        <span class="label">Platforms</span>
+        Linux x86_64 ships as a prebuilt tarball. macOS and Windows are supported
+        by building from source — the codebase includes a Windows compatibility
+        shim and a MinGW-w64 cross-compile path. See
+        <a href="../sdk/README.md">the SDK README</a> for the build-from-source steps.
+    </div>
+
+    <h2 id="install">1. Install the SDK</h2>
+    <p>Download the release archive for your platform and extract it:</p>
+<pre><span class="filename">shell <span class="lang">bash</span></span><code><span class="t-c"># Linux x86_64 — prebuilt</span>
+tar xzf limbic-sdk-0.1.0-linux-x86_64.tar.gz
+cd limbic-sdk-0.1.0-linux-x86_64
+ls
+<span class="t-c"># include/  lib/  examples/  README.md  LICENSE</span></code></pre>
+    <p>On macOS or Windows, clone the repo and run the build script — the output
+    layout matches the prebuilt tarball.</p>
+
+    <h2 id="link">2. Link from CMake</h2>
+<pre><span class="filename">CMakeLists.txt <span class="lang">cmake</span></span><code>cmake_minimum_required(VERSION <span class="t-n">3.16</span>)
+project(my_game LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD <span class="t-n">17</span>)
+
+find_package(Limbic REQUIRED)
+
+add_executable(my_game main.cpp)
+target_link_libraries(my_game PRIVATE Limbic::limbic)</code></pre>
+<pre><span class="filename">shell <span class="lang">bash</span></span><code>cmake -B build -DCMAKE_PREFIX_PATH=/path/to/limbic-sdk-0.1.0-linux-x86_64
+cmake --build build</code></pre>
+
+    <h2 id="hello">3. Hello, agent</h2>
+<pre><span class="filename">main.cpp <span class="lang">C++</span></span><code><span class="t-c">#include</span> <span class="t-s">"limbic/limbic_engine.hpp"</span>
+<span class="t-c">#include</span> <span class="t-s">&lt;cstdio&gt;</span>
+<span class="t-k">using namespace</span> limbic::sdk;
+
+<span class="t-t">int</span> <span class="t-f">main</span>() {
+    EngineConfig cfg;
+    cfg.preset     = Preset::COGNITIVE;
+    cfg.max_agents = <span class="t-n">10</span>;
+    cfg.seed       = <span class="t-n">42</span>;
+    <span class="t-k">auto</span> engine = LimbicEngine::create(cfg);
+
+    engine.register_action(<span class="t-s">"forage"</span>, TAG_RESOURCE | TAG_SURVIVAL);
+    engine.register_action(<span class="t-s">"trade"</span>,  TAG_SOCIAL   | TAG_COOPERATIVE);
+    engine.register_action(<span class="t-s">"rest"</span>,   TAG_ROUTINE  | TAG_SURVIVAL);
+
+    AgentConfig ac{ .x=<span class="t-n">0</span>, .y=<span class="t-n">0</span>, .personality=Personality::MERCHANT };
+    <span class="t-t">uint32_t</span> npc = engine.spawn(ac);
+    engine.warmup(npc, <span class="t-n">100</span>);
+
+    <span class="t-k">for</span> (<span class="t-t">int</span> i = <span class="t-n">0</span>; i &lt; <span class="t-n">10</span>; ++i) {
+        <span class="t-t">float</span> energy = <span class="t-n">0.6f</span>, hunger = <span class="t-n">0.4f</span>;
+        engine.perceive(npc, Percept::ENERGY_LEVEL, &amp;energy, <span class="t-n">1</span>);
+        engine.perceive(npc, Percept::HUNGER,       &amp;hunger, <span class="t-n">1</span>);
+        engine.tick(<span class="t-n">0.016f</span>);
+
+        Decision d = engine.get_decision(npc);
+        <span class="t-f">printf</span>(<span class="t-s">"tick %d: %-8s confidence=%.2f\n"</span>,
+               i, d.action_name, d.confidence);
+
+        engine.report_outcome(npc, <span class="t-n">0.3f</span>, <span class="t-n">2.f</span>);
+    }
+}</code></pre>
+
+    <h2 id="run">4. Run it</h2>
+<pre><span class="filename">shell <span class="lang">bash</span></span><code><span class="t-c"># Linux</span>
+LD_LIBRARY_PATH=/path/to/limbic-sdk/lib ./build/my_game
+
+<span class="t-c"># macOS</span>
+DYLD_LIBRARY_PATH=/path/to/limbic-sdk/lib ./build/my_game
+
+<span class="t-c"># Windows — place limbic.dll next to the .exe, then run it.</span>
+
+<span class="t-c"># tick 0: forage   confidence=0.62
+# tick 1: forage   confidence=0.71
+# tick 2: trade    confidence=0.58
+# ...</span></code></pre>
+
+    <div class="callout info">
+        <span class="label">Tip</span>
+        <code>warmup()</code> runs the brain forward without advancing the world clock,
+        so freshly-spawned agents start with established neuromodulator baselines
+        instead of a flat blank-slate.
+    </div>
+
+    <h2 id="next">Next</h2>
+    <ul>
+        <li><a href="architecture.html">Understand the architecture</a> — three layers, one pipeline.</li>
+        <li><a href="modules.html">Explore the 30 brain modules</a> — what each one does and when it runs.</li>
+        <li><a href="api.html">Browse the API reference</a> — every method on <code>LimbicEngine</code>.</li>
+        <li><a href="examples.html">Read full examples</a> — town, factions, dialogue context, Python, Unity.</li>
+    </ul>
+
+    <footer class="page-footer">
+        <div><a href="index.html">← Introduction</a></div>
+        <div>Next: <a href="architecture.html">Architecture →</a></div>
+    </footer>
+</main>
+
+<aside class="toc">
+    <div class="toc-title">On this page</div>
+    <a href="#install">1. Install the SDK</a>
+    <a href="#link">2. Link from CMake</a>
+    <a href="#hello">3. Hello, agent</a>
+    <a href="#run">4. Run it</a>
+    <a href="#next">Next</a>
+</aside>
+
+</div>
+</body>
+</html>

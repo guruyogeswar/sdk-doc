@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++ API · LIMBIC Engine</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <a href="index.html" class="brand"><span class="brand-mark">L</span> LIMBIC Engine</a>
+    <span class="version">v0.1.0</span>
+    <span class="spacer"></span>
+    <nav class="topbar-links">
+        <a href="api.html">API</a>
+        <a href="examples.html">Examples</a>
+        <a href="../sdk/README.md">SDK reference</a>
+    </nav>
+</header>
+
+<div class="shell">
+
+<aside class="sidebar">
+    <div class="nav-group">
+        <div class="nav-group-title">Getting started</div>
+        <a href="index.html">Introduction</a>
+        <a href="quickstart.html">Quickstart</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Concepts</div>
+        <a href="architecture.html">Architecture</a>
+        <a href="modules.html">Brain modules</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Reference</div>
+        <a href="api.html" class="active">C++ API</a>
+    </div>
+    <div class="nav-group">
+        <div class="nav-group-title">Guides</div>
+        <a href="examples.html">Examples</a>
+    </div>
+</aside>
+
+<main class="content">
+    <div class="breadcrumb"><a href="index.html">Docs</a><span class="sep">/</span>Reference<span class="sep">/</span>C++ API</div>
+
+    <h1>C++ API reference</h1>
+    <p class="lede">
+        The complete public surface of <code>LimbicEngine</code>, grouped by purpose.
+        Defined in <code>limbic/limbic_engine.hpp</code>; all types in
+        <code>limbic/limbic_types.hpp</code>.
+    </p>
+
+    <h2 id="lifecycle">Lifecycle</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Method</th><th>Returns</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr><td><code>LimbicEngine::create(cfg)</code></td><td><code>LimbicEngine</code></td><td>Construct with the given <code>EngineConfig</code>. Move-only.</td></tr>
+            <tr><td><code>LimbicEngine::version()</code></td><td><code>const char*</code></td><td>SDK version string, e.g. <code>"0.1.0"</code>.</td></tr>
+            <tr><td><code>tick(dt)</code></td><td><code>void</code></td><td>Advance all alive agents by <code>dt</code> seconds.</td></tr>
+            <tr><td><code>tick_agents(ids, n, dt)</code></td><td><code>void</code></td><td>Tick only the listed agents (LOD).</td></tr>
+            <tr><td><code>warmup(id, ticks)</code></td><td><code>void</code></td><td>Run the brain forward without world time, post-spawn.</td></tr>
+            <tr><td><code>warmup_all(ticks)</code></td><td><code>void</code></td><td>Warm every alive agent.</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="population">Population &amp; groups</h2>
+    <div class="table-wrap"><table>
+        <tbody>
+            <tr><td><code>spawn(cfg)</code></td><td><code>uint32_t</code></td><td>Create an agent. Returns id, or <code>UINT32_MAX</code> at capacity.</td></tr>
+            <tr><td><code>despawn(id)</code></td><td><code>void</code></td><td>Remove an agent.</td></tr>
+            <tr><td><code>alive_count()</code></td><td><code>uint32_t</code></td><td>Number of live agents.</td></tr>
+            <tr><td><code>tick_count()</code></td><td><code>uint32_t</code></td><td>Ticks since engine creation.</td></tr>
+            <tr><td><code>set_group(id, gid)</code></td><td><code>void</code></td><td>Assign to faction <code>1..63</code>; <code>0</code> = none.</td></tr>
+            <tr><td><code>get_group(id)</code></td><td><code>uint32_t</code></td><td>Read faction id.</td></tr>
+            <tr><td><code>get_group_agents(gid, out, n)</code></td><td><code>uint32_t</code></td><td>List members of a faction.</td></tr>
+            <tr><td><code>agents_near(x, y, r, out, n)</code></td><td><code>uint32_t</code></td><td>Spatial query, sorted by distance.</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="perception">Perception</h2>
+    <p>Push world state into agents' senses. Sixteen built-in percept types plus 64 reserved custom slots.</p>
+    <div class="table-wrap"><table>
+        <tbody>
+            <tr><td><code>perceive(id, type, data, len)</code></td><td><code>void</code></td><td>Push one percept to one agent.</td></tr>
+            <tr><td><code>perceive_batch(entries, n, data)</code></td><td><code>void</code></td><td>Bulk push to many agents from one flat buffer.</td></tr>
+        </tbody>
+    </table></div>
+
+    <h3 id="percept-types">Built-in percept types</h3>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Percept</th><th>Data layout</th></tr></thead>
+        <tbody>
+            <tr><td><code>POSITION</code></td><td><code>[x, y]</code></td></tr>
+            <tr><td><code>SEE_AGENT</code></td><td><code>[id, dx, dy, energy, threat]</code></td></tr>
+            <tr><td><code>SEE_RESOURCE</code></td><td><code>[dx, dy, type, amount]</code></td></tr>
+            <tr><td><code>ENERGY_LEVEL</code> · <code>HUNGER</code> · <code>FATIGUE</code> · <code>PAIN</code></td><td><code>[0..1]</code></td></tr>
+            <tr><td><code>TOOK_DAMAGE</code></td><td><code>[amount, attacker_id]</code></td></tr>
+            <tr><td><code>WAS_HELPED</code> · <code>WAS_HARMED</code> · <code>WAS_BETRAYED</code></td><td><code>[other_id, value]</code></td></tr>
+            <tr><td><code>HEARD_SPEECH</code></td><td><code>[speaker_id, sentiment]</code></td></tr>
+            <tr><td><code>SOCIAL_NEED</code> · <code>TIME_OF_DAY</code></td><td><code>[0..1]</code></td></tr>
+            <tr><td><code>DANGER_NEARBY</code></td><td><code>[threat, dx, dy]</code></td></tr>
+            <tr><td><code>CUSTOM_0..CUSTOM_63</code></td><td>game-defined</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="actions">Actions &amp; decisions</h2>
+    <div class="table-wrap"><table>
+        <tbody>
+            <tr><td><code>register_action(name, tags)</code></td><td><code>uint32_t</code></td><td>Map a game action to a tag bitmask.</td></tr>
+            <tr><td><code>get_decision(id)</code></td><td><code>Decision</code></td><td>Selected action + confidence + target.</td></tr>
+            <tr><td><code>report_outcome(id, reward, ΔE)</code></td><td><code>void</code></td><td>Feed reward + energy delta. Drives DA learning.</td></tr>
+            <tr><td><code>record_help / harm / betrayal</code></td><td><code>void</code></td><td>Update social-graph edges.</td></tr>
+            <tr><td><code>nudge(id, tags, strength)</code></td><td><code>void</code></td><td>Soft bias toward tag-matching actions.</td></tr>
+            <tr><td><code>explain(id)</code></td><td><code>Explanation</code></td><td>Per-module contribution to last decision.</td></tr>
+        </tbody>
+    </table></div>
+
+    <h3 id="tags">Action tags</h3>
+    <p>
+        <code>TAG_MOVEMENT</code> · <code>TAG_RESOURCE</code> · <code>TAG_SOCIAL</code> ·
+        <code>TAG_COOPERATIVE</code> · <code>TAG_AGGRESSIVE</code> · <code>TAG_DEFENSIVE</code> ·
+        <code>TAG_SURVIVAL</code> · <code>TAG_CREATIVE</code> · <code>TAG_INVESTIGATIVE</code> ·
+        <code>TAG_ROUTINE</code> · <code>TAG_COMMUNICATION</code> · <code>TAG_LEISURE</code>.
+        Combine with <code>|</code>.
+    </p>
+
+    <h2 id="state">State queries</h2>
+    <p>All queries are read-only and cheap. Call between ticks as often as needed.</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Method</th><th>Returns</th><th>Preset</th></tr></thead>
+        <tbody>
+            <tr><td><code>get_emotions(id)</code></td><td>valence, arousal, dominance, fear, anger, contentment, loneliness</td><td>all</td></tr>
+            <tr><td><code>get_drives(id)</code></td><td>hunger, thirst, fatigue, social_need, pain, boredom, energy</td><td>all</td></tr>
+            <tr><td><code>get_neuro_state(id)</code></td><td>DA, 5-HT, NE, ACh, cortisol, oxytocin, endorphins</td><td>all</td></tr>
+            <tr><td><code>get_relationship(a, b)</code></td><td>trust, threat, ally, enemy, betrayed</td><td>COGNITIVE+</td></tr>
+            <tr><td><code>get_memories(id)</code></td><td>up to 32 episodic memories</td><td>FULL</td></tr>
+            <tr><td><code>get_beliefs(id)</code></td><td>top 32 causal beliefs</td><td>FULL</td></tr>
+            <tr><td><code>get_identity(id)</code></td><td>evolved personality vector</td><td>FULL</td></tr>
+            <tr><td><code>get_action_history(id)</code></td><td>last 32 actions, streaks</td><td>all</td></tr>
+            <tr><td><code>get_action_scores(id)</code></td><td>D1 Go / D2 NoGo / salience / PFC bias</td><td>all</td></tr>
+            <tr><td><code>get_dialogue_context(speaker, listener)</code></td><td>tone, intent, relationship, top_need, shared memories</td><td>COGNITIVE+</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="ops">Operations</h2>
+    <div class="cards">
+        <div class="card">
+            <h4>Save &amp; load</h4>
+            <p><code>save(path)</code>, <code>load(path)</code> for the full engine. <code>save_agent</code>, <code>load_agent</code> for one NPC.</p>
+        </div>
+        <div class="card">
+            <h4>Events</h4>
+            <p><code>subscribe(mask, cb)</code> for spawns, deaths, action changes, emotion shifts. Or <code>poll_events()</code> after each tick.</p>
+        </div>
+        <div class="card">
+            <h4>Runtime tuning</h4>
+            <p><code>set_param(id, key, val)</code> — 14 named parameters (baselines, learning rate, exploration, discount, decay), per agent or globally.</p>
+        </div>
+        <div class="card">
+            <h4>Profiling &amp; logging</h4>
+            <p><code>get_tick_profile()</code> returns per-module microseconds. <code>set_log_callback()</code> routes internal logs out.</p>
+        </div>
+    </div>
+
+    <h2 id="presets">Presets</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Preset</th><th>Modules</th><th>Use case</th></tr></thead>
+        <tbody>
+            <tr><td><code>Preset::REACTIVE</code></td><td>8</td><td>Crowd filler, animals, ambient NPCs.</td></tr>
+            <tr><td><code>Preset::COGNITIVE</code></td><td>18</td><td>Merchants, companions, quest-givers.</td></tr>
+            <tr><td><code>Preset::FULL</code></td><td>30</td><td>Persistent characters, emergent stories.</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="personalities">Personalities</h2>
+    <p>Pre-tuned neuromodulator baselines. A bias, not a constraint — agents still learn and adapt.</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Personality</th><th>Neuromodulator profile</th><th>Tendency</th></tr></thead>
+        <tbody>
+            <tr><td><code>BLANK</code></td><td>Flat baselines</td><td>Learns from scratch</td></tr>
+            <tr><td><code>GUARD</code></td><td>High NE + END, low CORT</td><td>Vigilant, pain-tolerant</td></tr>
+            <tr><td><code>MERCHANT</code></td><td>High DA + ACh</td><td>Reward-seeking, attentive</td></tr>
+            <tr><td><code>VILLAGER</code></td><td>Balanced</td><td>General-purpose</td></tr>
+            <tr><td><code>COWARD</code></td><td>High CORT + NE, low DA</td><td>Risk-averse, hypervigilant</td></tr>
+            <tr><td><code>BRAWLER</code></td><td>High DA + NE + END, low 5-HT</td><td>Impulsive, aggressive</td></tr>
+            <tr><td><code>HERMIT</code></td><td>Low OXT, high 5-HT</td><td>Solitary, patient</td></tr>
+            <tr><td><code>LEADER</code></td><td>High DA + OXT + ACh</td><td>Social, decisive</td></tr>
+            <tr><td><code>SCHOLAR</code></td><td>High ACh + 5-HT, low NE</td><td>Curious, calm</td></tr>
+            <tr><td><code>EXPLORER</code></td><td>High DA + NE + ACh, low 5-HT</td><td>Novelty-seeking, restless</td></tr>
+        </tbody>
+    </table></div>
+
+    <h2 id="params">Tunable parameters</h2>
+    <p>Pass to <code>set_param(id, key, value)</code>. Use <code>ALL_AGENTS</code> (<code>UINT32_MAX</code>) as id to apply globally.</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Key</th><th>Range</th><th>Default</th><th>Meaning</th></tr></thead>
+        <tbody>
+            <tr><td><code>dopamine_baseline</code></td><td>0–1</td><td>0.5</td><td>Tonic DA — reward sensitivity</td></tr>
+            <tr><td><code>serotonin_baseline</code></td><td>0–1</td><td>0.5</td><td>Tonic 5-HT — patience, impulse control</td></tr>
+            <tr><td><code>norepinephrine_baseline</code></td><td>0–1</td><td>0.5</td><td>Alertness, vigilance</td></tr>
+            <tr><td><code>acetylcholine_baseline</code></td><td>0–1</td><td>0.5</td><td>Attention, learning</td></tr>
+            <tr><td><code>cortisol_baseline</code></td><td>0–1</td><td>0.1</td><td>Stress level</td></tr>
+            <tr><td><code>oxytocin_baseline</code></td><td>0–1</td><td>0.5</td><td>Social bonding</td></tr>
+            <tr><td><code>endorphin_baseline</code></td><td>0–1</td><td>0.5</td><td>Pain tolerance</td></tr>
+            <tr><td><code>learning_rate</code></td><td>0–2</td><td>0.5</td><td>Base RL rate</td></tr>
+            <tr><td><code>exploration_rate</code></td><td>0–1</td><td>0.2</td><td>Exploration vs exploitation</td></tr>
+            <tr><td><code>temperature</code></td><td>0.01–5</td><td>1.0</td><td>Softmax temperature on action selection</td></tr>
+            <tr><td><code>discount_factor</code></td><td>0–1</td><td>0.8</td><td>Temporal discount (γ)</td></tr>
+            <tr><td><code>habituation_rate</code></td><td>0–1</td><td>0.1</td><td>Repetition suppression strength</td></tr>
+            <tr><td><code>memory_decay</code></td><td>0–1</td><td>0.99</td><td>Hippocampal decay rate</td></tr>
+            <tr><td><code>bias_persistence</code></td><td>0–1</td><td>0.0</td><td>PFC bias carryover across ticks</td></tr>
+        </tbody>
+    </table></div>
+
+    <footer class="page-footer">
+        <div><a href="modules.html">← Brain modules</a></div>
+        <div>Next: <a href="examples.html">Examples →</a></div>
+    </footer>
+</main>
+
+<aside class="toc">
+    <div class="toc-title">On this page</div>
+    <a href="#lifecycle">Lifecycle</a>
+    <a href="#population">Population &amp; groups</a>
+    <a href="#perception">Perception</a>
+    <a href="#percept-types" class="l2">Percept types</a>
+    <a href="#actions">Actions &amp; decisions</a>
+    <a href="#tags" class="l2">Action tags</a>
+    <a href="#state">State queries</a>
+    <a href="#ops">Operations</a>
+    <a href="#presets">Presets</a>
+    <a href="#personalities">Personalities</a>
+    <a href="#params">Tunable parameters</a>
+</aside>
+
+</div>
+</body>
+</html>
