@@ -47,7 +47,7 @@
 
     <h1>Examples</h1>
     <p class="lede">
-        Five end-to-end snippets — minimal loop, town scenario, dialogue context,
+        Five end-to-end snippets - minimal loop, town scenario, dialogue context,
         Python, and Unity. The full source for each ships in <code>sdk/examples/</code>
         and inside the release tarball.
     </p>
@@ -112,7 +112,7 @@ engine.tick_agents(guard_ids, n, <span class="t-n">0.016f</span>);
 engine.save(<span class="t-s">"town_state.bin"</span>);</code></pre>
 
     <h2 id="dialogue">Dialogue context for a quest NPC</h2>
-    <p>One call returns tone, intent, relationship, top urgent need, and the four most emotionally-weighted shared memories. The intent (<code>SEEK_HELP</code>, <code>ACCUSE</code>, <code>THANK</code>, <code>THREATEN</code>, <code>SOCIALIZE</code>, …) is inferred from internal state — never authored.</p>
+    <p>One call returns tone, intent, relationship, top urgent need, and the four most emotionally-weighted shared memories. The intent (<code>SEEK_HELP</code>, <code>ACCUSE</code>, <code>THANK</code>, <code>THREATEN</code>, <code>SOCIALIZE</code>, …) is inferred from internal state - never authored.</p>
 <pre><span class="filename">dialogue.cpp <span class="lang">C++</span></span><code><span class="t-k">auto</span> ctx = engine.get_dialogue_context(npc, player);
 
 <span class="t-k">switch</span> (ctx.intent) {
@@ -126,9 +126,9 @@ engine.save(<span class="t-s">"town_state.bin"</span>);</code></pre>
         bark = (ctx.tone == Tone::FRIENDLY) ? <span class="t-s">"Good to see you!"</span> : <span class="t-s">"...hey."</span>;
         <span class="t-k">break</span>;
 }</code></pre>
-    <p>Or feed the struct to an LLM prompt — tone, relationship, trust, top need, and recent shared memories produce grounded barks without hallucinated history.</p>
+    <p>Or feed the struct to an LLM prompt - tone, relationship, trust, top need, and recent shared memories produce grounded barks without hallucinated history.</p>
 
-    <h2 id="python">Python — experiments and RL</h2>
+    <h2 id="python">Python - experiments and RL</h2>
 <pre><span class="filename">my_experiment.py <span class="lang">python</span></span><code><span class="t-k">from</span> limbic <span class="t-k">import</span> LimbicEngine, Preset, Personality, Percept
 
 <span class="t-k">with</span> LimbicEngine(preset=Preset.COGNITIVE, max_agents=<span class="t-n">100</span>) <span class="t-k">as</span> engine:
@@ -138,7 +138,7 @@ engine.save(<span class="t-s">"town_state.bin"</span>);</code></pre>
     <span class="t-f">print</span>(<span class="t-s">f"{d.action_name} (confidence: {d.confidence:.2f})"</span>)</code></pre>
     <p>Set <code>LIMBIC_LIB</code> to the path of <code>liblimbic.so</code> before running.</p>
 
-    <h2 id="unity">Unity — drop-in NPC</h2>
+    <h2 id="unity">Unity - drop-in NPC</h2>
 <pre><span class="filename">NpcBrain.cs <span class="lang">C#</span></span><code><span class="t-k">using</span> Limbic;
 
 <span class="t-k">var</span> engine = <span class="t-k">new</span> LimbicEngine(<span class="t-k">new</span> LimbicConfig {

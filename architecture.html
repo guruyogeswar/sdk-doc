@@ -58,7 +58,7 @@
     <div class="table-wrap"><table>
         <thead><tr><th>Layer</th><th>Surface</th><th>Responsibility</th></tr></thead>
         <tbody>
-            <tr><td><strong>3</strong></td><td><code>limbic.h</code> · C FFI</td><td>Stable C ABI — used by the Python, C#, Godot, and Unity bindings.</td></tr>
+            <tr><td><strong>3</strong></td><td><code>limbic.h</code> · C FFI</td><td>Stable C ABI - used by the Python, C#, Godot, and Unity bindings.</td></tr>
             <tr><td><strong>2</strong></td><td><code>LimbicEngine</code> · C++ class</td><td>Primary integration. Move-only RAII handle. <code>spawn</code>, <code>perceive</code>, <code>tick</code>, <code>get_decision</code>, <code>report_outcome</code>.</td></tr>
             <tr><td><strong>1</strong></td><td>core</td><td>The brain itself. Sealed. Consumers receive only the compiled shared library.</td></tr>
         </tbody>
@@ -77,14 +77,14 @@
     </div>
     <div class="callout warn">
         <span class="label">Rule</span>
-        Fix perception or rewards — never hardcode behaviour. If an agent does the
+        Fix perception or rewards - never hardcode behaviour. If an agent does the
         wrong thing, the diagnosis is upstream of the basal ganglia: bad percepts,
         bad reward shaping, or a misaligned neuromodulator baseline.
     </div>
 
     <h2 id="data">Data model: structure of arrays</h2>
     <p>
-        Every per-agent field lives in a pool — a flat <code>std::vector</code>
+        Every per-agent field lives in a pool - a flat <code>std::vector</code>
         indexed by agent id. A module reads one or two pool fields and writes one
         or two pool fields. There are no agent objects.
     </p>
@@ -97,14 +97,14 @@
     <ul>
         <li><strong>Cache locality.</strong> A module's hot loop walks one contiguous array.</li>
         <li><strong>Parallelism.</strong> <code>#pragma omp parallel for</code> over agent ids is safe and trivial.</li>
-        <li><strong>Serialisation.</strong> A pool is its arrays plus a header — saving means dumping bytes.</li>
+        <li><strong>Serialisation.</strong> A pool is its arrays plus a header - saving means dumping bytes.</li>
     </ul>
 
     <h2 id="modules">Module discipline</h2>
     <div class="cards">
         <div class="card">
             <h4>Presets, not feature flags</h4>
-            <p>Three presets — <code>REACTIVE</code>, <code>COGNITIVE</code>, <code>FULL</code> — control which modules run on a given agent.</p>
+            <p>Three presets - <code>REACTIVE</code>, <code>COGNITIVE</code>, <code>FULL</code> - control which modules run on a given agent.</p>
         </div>
         <div class="card">
             <h4>Deterministic by seed</h4>
@@ -112,7 +112,7 @@
         </div>
         <div class="card">
             <h4>Explainable</h4>
-            <p>Every decision exposes its evidence via <code>explain()</code> — per-module contribution, neuromodulator state, action scores.</p>
+            <p>Every decision exposes its evidence via <code>explain()</code> - per-module contribution, neuromodulator state, action scores.</p>
         </div>
         <div class="card">
             <h4>LOD-friendly</h4>

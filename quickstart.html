@@ -54,19 +54,19 @@
     <div class="callout info">
         <span class="label">Platforms</span>
         Linux x86_64 ships as a prebuilt tarball. macOS and Windows are supported
-        by building from source — the codebase includes a Windows compatibility
+        by building from source - the codebase includes a Windows compatibility
         shim and a MinGW-w64 cross-compile path. See
         <a href="../sdk/README.md">the SDK README</a> for the build-from-source steps.
     </div>
 
     <h2 id="install">1. Install the SDK</h2>
     <p>Download the release archive for your platform and extract it:</p>
-<pre><span class="filename">shell <span class="lang">bash</span></span><code><span class="t-c"># Linux x86_64 — prebuilt</span>
+<pre><span class="filename">shell <span class="lang">bash</span></span><code><span class="t-c"># Linux x86_64 - prebuilt</span>
 tar xzf limbic-sdk-0.1.0-linux-x86_64.tar.gz
 cd limbic-sdk-0.1.0-linux-x86_64
 ls
 <span class="t-c"># include/  lib/  examples/  README.md  LICENSE</span></code></pre>
-    <p>On macOS or Windows, clone the repo and run the build script — the output
+    <p>On macOS or Windows, clone the repo and run the build script - the output
     layout matches the prebuilt tarball.</p>
 
     <h2 id="link">2. Link from CMake</h2>
@@ -122,7 +122,7 @@ LD_LIBRARY_PATH=/path/to/limbic-sdk/lib ./build/my_game
 <span class="t-c"># macOS</span>
 DYLD_LIBRARY_PATH=/path/to/limbic-sdk/lib ./build/my_game
 
-<span class="t-c"># Windows — place limbic.dll next to the .exe, then run it.</span>
+<span class="t-c"># Windows - place limbic.dll next to the .exe, then run it.</span>
 
 <span class="t-c"># tick 0: forage   confidence=0.62
 # tick 1: forage   confidence=0.71
@@ -138,10 +138,10 @@ DYLD_LIBRARY_PATH=/path/to/limbic-sdk/lib ./build/my_game
 
     <h2 id="next">Next</h2>
     <ul>
-        <li><a href="architecture.html">Understand the architecture</a> — three layers, one pipeline.</li>
-        <li><a href="modules.html">Explore the 30 brain modules</a> — what each one does and when it runs.</li>
-        <li><a href="api.html">Browse the API reference</a> — every method on <code>LimbicEngine</code>.</li>
-        <li><a href="examples.html">Read full examples</a> — town, factions, dialogue context, Python, Unity.</li>
+        <li><a href="architecture.html">Understand the architecture</a> - three layers, one pipeline.</li>
+        <li><a href="modules.html">Explore the 30 brain modules</a> - what each one does and when it runs.</li>
+        <li><a href="api.html">Browse the API reference</a> - every method on <code>LimbicEngine</code>.</li>
+        <li><a href="examples.html">Read full examples</a> - town, factions, dialogue context, Python, Unity.</li>
     </ul>
 
     <footer class="page-footer">
